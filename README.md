@@ -8,6 +8,12 @@ Abrimos Docker y TablePlus, luego abrimos una terminal, parados en la carpeta ra
 docker compose up -d
 ```
 
+El siguiente comando nos indica las imagenes q se estan ejecutando y el puerto:
+
+```bash
+docker ps
+```
+
 Para ver las tablas en TablePlus tenemos que elegir la conexxion configurada para esa BD, se abe otra ventana, vamos al ícono de Base de Dato y seleccionamos db_crud, luego le damos click al botón "Open".
 
 ## Levantar proyecto
@@ -25,6 +31,8 @@ Escucha constantemente los cambios
 ```bash
 npm run start:dev
 ```
+
+---
 
 ---
 
@@ -158,11 +166,11 @@ app.setGlobalPrefix('api/v1');
 `main.ts`
 
 app.useGlobalPipes(
-new ValidationPipe({
-whitelist: true,
-forbidNonWhitelisted: true,
-transform: true,
-})
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  })
 );
 
 whitelist: (el validador quitará al objeto validado (devuelto) cualquier propiedad que no utilice ningún decorador de validación.)
@@ -192,18 +200,18 @@ Luego importamos en el modulo principal.
 `app.module.ts`
 
 @Module({
-imports: [..., TypeOrmModule.forRoot({
-type: 'mysql',
-host: 'localhost',
-port: aca es 3307, depende de lo indicado en el .yml, ports: - "3307:3306" entonces es '3307'
-username: el indicado en MYSQL_USER,
-password: el indicado en MYSQL_PASSWORD,
-database: el indicado en MYSQL_DATABASE,
-// entities: [], reemplazado por autoLaoadEntities,
-autoLoadEntities: true, //carga las entidades automáticamente
-synchronize: true,
-}),],
-...,
+  imports: [..., TypeOrmModule.forRoot({
+    type: 'mysql',
+    host: 'localhost',
+    port: aca es 3307, depende de lo indicado en el .yml, ports: - "3307:3306" entonces es '3307'
+    username: el indicado en MYSQL_USER,
+    password: el indicado en MYSQL_PASSWORD,
+    database: el indicado en MYSQL_DATABASE,
+    // entities: [], reemplazado por autoLaoadEntities,
+    autoLoadEntities: true, //carga las entidades automáticamente
+    synchronize: true,
+  }),],
+  ...,
 })
 
 ## Configurando entidadades
@@ -229,25 +237,25 @@ Usaremos los metodos y decoradores de TypeORM para hacer las entidades, estas en
 
 @Entity()
 export class Cat {
-@Column({ primary: true, generated: true })
-id: number;
+  @Column({ primary: true, generated: true })
+  id: number;
 
-@Column()
-name: string;
+  @Column()
+  name: string;
 
-@Column()
-age: number;
+  @Column()
+  age: number;
 
-@Column()
-breed: string;
+  @Column()
+  breed: string;
 }
 
 `cats.module.ts`
 
 @Module({
-imports: [TypeOrmModule.forFeature([Cat])],
-controllers: [CatsController],
-providers: [CatsService],
+  imports: [TypeOrmModule.forFeature([Cat])],
+  controllers: [CatsController],
+  providers: [CatsService],
 })
 
   <br/>
@@ -262,11 +270,11 @@ Le inyectaremos a al service cats el RepositorioCat para que pueda usar los mét
 
 @Injectable()
 export class CatsService {
-constructor(
-@InjectRepository(Cat)
-private catsRepository: Repository<Cat>
-) {}
-...
+  constructor(
+    @InjectRepository(Cat)
+    private catsRepository: Repository<Cat>
+  ) {}
+  ...
 }
 
 vamos a poder acceder en la clase CatsService a todos los métodos inyectados.
@@ -280,14 +288,14 @@ Vamos a modificar cada método en service parar que traiga, edite o elimine de l
 `cats.service.ts`
 
 export class CatsService {
-constructor(
-...
-) {}
-...
-async findAll() {
-return await this.catsRepository.find();
-}
-...
+  constructor(
+    ...
+  ) {}
+  ...
+  async findAll() {
+    return await this.catsRepository.find();
+  }
+  ...
 }
 
 ### Método create
@@ -299,24 +307,64 @@ Antes de completar este método hay que dfinir el dto del método create
 `dto/create-cat.dto.ts`
 
 export class CreateCatDto {
-@IsString()
-@MinLength(1)
-@MaxLength(10)
-name: string;
+  @IsString()
+  @MinLength(1)
+  @MaxLength(10)
+  name: string;
 
-@IsInt()
-@IsPositive()
-age: number;
+  @IsInt()
+  @IsPositive()
+  age: number;
 
-@IsString()
-@IsOptional()
-breead?: string;
+  @IsString()
+  @IsOptional()
+  breead?: string;
 
-@IsDate()
-dateModified;
+  @IsDate()
+  dateModified;
 }
 
-si el cliente intenta enviar un dato que no esta en el dto el validador enviará un error especificando el problema.
+Si el cliente intenta enviar un dato que no esta en el dto el validador enviará un error especificando el problema.
+
+Hora haremos el método create:
+
+`cats.service.ts`
+
+export class CatsService {
+  constructor(
+    ...
+  ) {}
+  ...
+  async create(createCatDto: CreateCatDto) {
+    try {
+      const cat = this.catsRepository.create({
+        ...createCatDto,
+        dateModified: new Date(),
+      });
+      return await this.catsRepository.save(cat);
+    } catch (error) {
+      console.warn(error);
+    }
+  }
+  ...
+}
+
+### Método findOne
+
+export class CatsService {
+  constructor(
+    ...
+  ) {}
+  ...
+ async findOne(id: number) {
+    try {
+      return await this.catsRepository.findOneBy({ id });
+    } catch (error) {
+      console.warn(error);
+    }
+  }
+  ...
+}
 
 ---
 
