@@ -2,6 +2,7 @@ import {
   Column,
   DeleteDateColumn,
   Entity,
+  UpdateDateColumn,
   // PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -20,9 +21,9 @@ export class Cat {
   @Column()
   breead: string;
 
-  @Column()
+  @UpdateDateColumn({ type: 'timestamp' })
   dateModified: Date;
 
-  @DeleteDateColumn()
-  deletedAt: boolean;
+  @DeleteDateColumn({ type: 'timestamp' })
+  deletedAt: Date;
 }

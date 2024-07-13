@@ -1,4 +1,5 @@
 import {
+  IsDate,
   // IsNull
   // IsNumber,
   // IsBoolean,
@@ -24,7 +25,4 @@ export class CreateCatDto {
   @IsString()
   @IsOptional()
   breead?: string;
-
-  @IsString()
-  dateModified;
 }

@@ -20,18 +20,19 @@ Para ver las tablas en TablePlus tenemos que elegir la conexxion configurada par
 
 Abrimos una terminal, parados en la carpeta raiz escribimos el sig comando:
 
-Levanta pero no carga los cambios
-
-```bash
-yarn nest start
-```
-
 Escucha constantemente los cambios
 
 ```bash
-npm run start:dev
+yarn run start:dev
 ```
 
+<!-- También tenemos este comando el cual hay que levancorrer cada vez que se hagan cambios
+
+```bash
+yarn nest start
+``` -->
+
+<!-- https://github.com/bluuweb/nestjs-mysql-cats-backend-node-docker-tyorm -->
 ---
 
 ---
@@ -161,17 +162,19 @@ yarn add class-validator class-transformer -SE
 
 Haremos validaciones de los datos de entrada en el main
 
-app.setGlobalPrefix('api/v1');
+app.setGlobalPrefix('api/v1'); 
 
-`main.ts`
+ `main.ts`
 
 app.useGlobalPipes(
   new ValidationPipe({
+
     whitelist: true,
     forbidNonWhitelisted: true,
     transform: true,
+
   })
-);
+); 
 
 whitelist: (el validador quitará al objeto validado (devuelto) cualquier propiedad que no utilice ningún decorador de validación.)
 forbidNonWhitelisted: (en lugar de eliminar las propiedades no incluidas en la lista blanca, el validador generará una excepción)
@@ -197,10 +200,11 @@ $ yarn add @nestjs/typeorm typeorm mysql2
 
 Luego importamos en el modulo principal.
 
-`app.module.ts`
+ `app.module.ts`
 
 @Module({
   imports: [..., TypeOrmModule.forRoot({
+
     type: 'mysql',
     host: 'localhost',
     port: aca es 3307, depende de lo indicado en el .yml, ports: - "3307:3306" entonces es '3307'
@@ -210,8 +214,9 @@ Luego importamos en el modulo principal.
     // entities: [], reemplazado por autoLaoadEntities,
     autoLoadEntities: true, //carga las entidades automáticamente
     synchronize: true,
-  }),],
-  ...,
+
+  }), ], 
+  ..., 
 })
 
 ## Configurando entidadades
@@ -228,34 +233,40 @@ TypeORM admite el patron de diseño repositorio, por lo que cada entidad tiene s
 
 Usaremos los metodos y decoradores de TypeORM para hacer las entidades, estas entidades tienen propiedades donde se guardan valores, una de las propiedades más importantes de una entidad es el Id (primary key), el cual es único e irrepetible en cada Colección.
 
-- En BD NO relacionales son los Campos del Documento en la Colecciones.
-- En BD relacionales son los Atributos de la Tabla/Relacion en la Colección.
+* En BD NO relacionales son los Campos del Documento en la Colecciones.
+* En BD relacionales son los Atributos de la Tabla/Relacion en la Colección.
 
 ### Creamos la entidad
 
-`en cat.entity.ts`
+ `en cat.entity.ts`
 
 @Entity()
 export class Cat {
   @Column({ primary: true, generated: true })
-  id: number;
+  id: number; 
 
   @Column()
-  name: string;
+  name: string; 
 
   @Column()
-  age: number;
+  age: number; 
 
   @Column()
-  breed: string;
+  breead: string; 
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  dateModified: Date; 
+
+  @DeleteDateColumn({ type: 'timestamp' })
+  deletedAt: Date; 
 }
 
-`cats.module.ts`
+ `cats.module.ts`
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Cat])],
-  controllers: [CatsController],
-  providers: [CatsService],
+  imports: [TypeOrmModule.forFeature([Cat])], 
+  controllers: [CatsController], 
+  providers: [CatsService], 
 })
 
   <br/>
@@ -266,13 +277,15 @@ export class Cat {
 
 Le inyectaremos a al service cats el RepositorioCat para que pueda usar los métodos de éste, luego lo inicializamos:
 
-`cats.service.ts`
+ `cats.service.ts`
 
 @Injectable()
 export class CatsService {
   constructor(
+
     @InjectRepository(Cat)
     private catsRepository: Repository<Cat>
+
   ) {}
   ...
 }
@@ -285,15 +298,15 @@ Vamos a modificar cada método en service parar que traiga, edite o elimine de l
 
 ### Método findAll
 
-`cats.service.ts`
+ `cats.service.ts`
 
 export class CatsService {
-  constructor(
-    ...
-  ) {}
-  ...
+  constructor( ... ) {}
+
   async findAll() {
+
     return await this.catsRepository.find();
+
   }
   ...
 }
@@ -302,66 +315,125 @@ export class CatsService {
 
 Los métodos de creación, edición y todo aquel que use un parametros, tiene un Dto (Data Transfer Object), que se usan para realizar la tarea del método, crear apartir de los datos enviados, reemplazar determinada infomración, eliminar aquel que tenga determinado dato, o buscar aque aquel que tenga determinado dato, esta data se esta gestionando desde el Cliente hacia el controlador y si esta data no esta mapeada, estructurada y validada pueden generar graves problemas.
 
-Antes de completar este método hay que dfinir el dto del método create
+Antes de completar este método hay que definir el dto del método create
 
-`dto/create-cat.dto.ts`
+ `dto/create-cat.dto.ts`
 
 export class CreateCatDto {
-  @IsString()
+ @IsString()
   @MinLength(1)
   @MaxLength(10)
-  name: string;
+  name: string; 
 
   @IsInt()
   @IsPositive()
-  age: number;
+  age: number; 
 
   @IsString()
   @IsOptional()
-  breead?: string;
-
-  @IsDate()
-  dateModified;
+  breead?: string; 
 }
 
 Si el cliente intenta enviar un dato que no esta en el dto el validador enviará un error especificando el problema.
 
 Hora haremos el método create:
 
-`cats.service.ts`
+ `cats.service.ts`
 
 export class CatsService {
-  constructor(
-    ...
-  ) {}
   ...
   async create(createCatDto: CreateCatDto) {
+
     try {
-      const cat = this.catsRepository.create({
-        ...createCatDto,
-        dateModified: new Date(),
-      });
-      return await this.catsRepository.save(cat);
+      return await this.catRepository.save(createCatDto);
     } catch (error) {
       console.warn(error);
     }
+
   }
   ...
 }
 
 ### Método findOne
 
+ `cats.service.ts`
+
 export class CatsService {
-  constructor(
-    ...
-  ) {}
   ...
  async findOne(id: number) {
+
     try {
       return await this.catsRepository.findOneBy({ id });
     } catch (error) {
       console.warn(error);
     }
+
+  }
+  ...
+}
+
+### Método remove
+
+existen varios metodos en Nest para eliminar registros de una tabla, los mas recomendados son:
+
+* softDelete (eliminación lógica): marca el registro como eliminado a través de una actualización del mismo, esto permitirnos manejar un histórico de cada registro.
+
+* softRemove (eliminación permanente): remueve de forma definitiva el registro seleccionado.
+
+usaremos el método softDelete y dejaremos un ejemplo de como se usa el softRemove 
+
+ `cats.service.ts`
+
+export class CatsService {
+  ...
+  async remove(id: number) {
+
+    try {
+      return await this.catRepository.softDelete({ id });
+      // return await this.catRepository.softRemove({ id }); 
+    } catch (error) {
+      console.warn(error);
+    }
+
+  }
+  ...
+}
+
+### Método update
+
+Antes de completar este método hay que definir el dto del método update
+
+ `dto/create-cat.dto.ts`
+
+export class UpdateCatDto {
+  @IsString()
+  @MinLength(1)
+  @MaxLength(10)
+  @IsOptional()
+  name?: string; 
+
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  age?: number; 
+
+  @IsString()
+  @IsOptional()
+  breed?: string; 
+}
+
+ `cats.service.ts`
+
+export class CatsService {
+  ...
+  async update(id: number, updateCatDto: UpdateCatDto) {
+
+    try {
+      return await this.catRepository.update(id, updateCatDto);
+    } catch (error) {
+      console.warn(error);
+    }
+
   }
   ...
 }
@@ -379,7 +451,9 @@ export class CatsService {
 </p>
 
   <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+
     <p align="center">
+
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
@@ -389,7 +463,9 @@ export class CatsService {
 <a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
 <a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
   <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
+
     <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+
   <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
 </p>
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
@@ -437,9 +513,9 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 
 ## Stay in touch
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+* Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
+* Website - [https://nestjs.com](https://nestjs.com/)
+* Twitter - [@nestframework](https://twitter.com/nestframework)
 
 ## License
 
