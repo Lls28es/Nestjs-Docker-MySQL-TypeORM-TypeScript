@@ -1,14 +1,14 @@
+import { Breed } from 'src/breeds/entities/breed.entity';
 import {
   Column,
   DeleteDateColumn,
   Entity,
+  ManyToOne,
   UpdateDateColumn,
-  // PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity()
 export class Cat {
-  // @PrimaryGeneratedColumn()
   @Column({ primary: true, generated: true })
   id: number;
 
@@ -18,12 +18,15 @@ export class Cat {
   @Column()
   age: number;
 
-  @Column()
-  breead: string;
-
   @UpdateDateColumn({ type: 'timestamp' })
   dateModified: Date;
 
   @DeleteDateColumn({ type: 'timestamp' })
   deletedAt: Date;
+
+  @ManyToOne(() => Breed, (breed) => breed.id, {
+    // cascade: true,
+    eager: true,
+  })
+  breed: Breed;
 }
